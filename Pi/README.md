@@ -1,32 +1,49 @@
 # Raspberry Pi Development
 
-Currently using a Pi 4 B 2018.
-
 The Raspberry Pi is responsible for:
  - receiving image from the ESP board via (wifi) websocket
  - process the image: face recognition 
  - send back result to the ESP board
 
- Remark: we initially had a Raspberry Pi Zero W V1.1, 2017, architecture ARMv6Z (32-bit), [see wiki's page](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications). This version of Pi Zero seems to create some complication, e.g. cannot SSH from VS Code because it is not a supported architecture ([github issue](https://github.com/microsoft/vscode-remote-release/issues/669)).
+Hardware:
+ - Currently using a Pi 4 B 2018.
+ - Initially, we had a Raspberry Pi Zero W V1.1, 2017, architecture ARMv6Z (32-bit), [see wiki's page](https://en.wikipedia.org/wiki/Raspberry_Pi#Specifications). This version of Pi Zero seems to create some complication, e.g. cannot SSH from VS Code because it is not a supported architecture ([github issue](https://github.com/microsoft/vscode-remote-release/issues/669)).
 
 
 ## Installation
 
+1) Using Raspberry Pi Imager, burn a "Raspberry Pi OS (64-bit)" which includes a Raspberry Pi Desktop.
+    1. Download Raspberry Pi Imager
+    2. Insert an empty SD card into your PC
+    3. Open the Imager software, select an OS (e.g. lite 32bit version), and configure it: enable SSH, set your WiFi, and user and password.
+    4. Write
+    5. Remove SD card from PC
+    6. Insert it into your Raspberry Pi 
 
-Set write to the setup.sh:
+2) Use the setup.sh script to install packages related to cmake and mosquitto, and enable mosquitto.service.
+
+- Set write to the setup.sh:
 ```
 chmod +x ./setup.sh
 ```
 
-Install python packages using pip
+- Install python packages using pip
 ```
 pip install -r requirements.txt
 ```
 
-Check installations
+- Check installations
 ```
 python3 -V
 pip3 -V
+```
+
+3) Create a virtual environment for the Python development:
+ - 
+
+4) In the virtual environment, install packages
+```
+pip install -r requirements.txt
 ```
 
 ### Websocket server
