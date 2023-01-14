@@ -124,11 +124,11 @@ As we do not need to have too many decimals after the coma and also for computat
 We then, based on the computation of the thin lens formula, we managed to isolate the required formula where $D$, the distance, is the variable that we are searching to compute : $D = \frac{f*(y’+y)}{y’}$
 
 <p align="center">
-	<img alt="thinLensFormulaPic1" src="./pictures/thinLensFormulaPic1.png"><br>
+	<img alt="thinLensFormulaPic1" src="./pictures/thinLensFormulaPic1.PNG"><br>
 	<em>figure 3 : Thin Lens Formula triangles for equation n°1</em>
   <br><em>Source: computer vision course from Prof FAVARO lecture 2a on camera</p>
 <p align="center">
-	<img alt="thinLensFormulaPic2" src="./pictures/thinLensFormulaPic2.png"><br>
+	<img alt="thinLensFormulaPic2" src="./pictures/thinLensFormulaPic2.PNG"><br>
 	<em>figure 4 : SThin Lens Formula triangles for equation n°2</em>
   <br><em>Source: computer vision course from Prof FAVARO lecture 2a on camera</p>
 
