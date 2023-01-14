@@ -27,7 +27,9 @@ By doing so, we would have at least proven some steps were possible and achievab
 
 Before the real implementation, we decided to make a small, representative scheme of our overall system. However, the actual implementation could result in a totally different one.
 
-//TODO insert pic "layout before implementation"
+<p align="center">
+	<img alt="beforeImplementation" src="./pictures/beforeImplementation.png"><br>
+	<em>figure 1 : Schematic system's representation before implementation</em></p>
 
 ## Implementation
 In this section, we will talk about how our idea was implemented and how far we were able to go from our initial goal.
@@ -47,7 +49,9 @@ To begin with, we managed to sort out the Elegoo libraries and code to snippet t
 We were then able to make a face recognition algorithm work via the WebCameraServer on the ESP32. However, the frame resolution needed to be really low and the frame quite small in order to have a fluid stream. We then shifted the computation to a PiZero with openCV and sent a continuous frame stream via a websocket. For bigger power, we shifted to a Pi4. The implementation of the face recognition as well as the websocket will be more deeply discussed here, but you can find the whole details for the Pi implementation under [its own section](./Pi).
 Based on our initial scheme, we soon realized that more communication protocols would be established, such as an extra UART communication between the Arduino Uno R3 and the ESP32. Contrary to what we initially thought, this Arduino board actually does not have any wifi available. Those iterations resulted in the following scheme where we were able to handle all the communications quite stably.
 
-//TODO insert pic "layout implemented"
+<p align="center">
+	<img alt="layoutImplemented" src="./pictures/layoutImplemented.png"><br>
+	<em>figure 2 : Schematic system's representation after implementation</em></p>
 
 We specified on the scheme that a JSON is being sent via MQTT and UART. It shows here where the packet is initially sent to and who is the real receiver. For this JSON, the ESP32 is being used as a middleware to communicate between the two boards. This scheme shows us that a phone was able to successfully connect itself to the broker that is being hosted by the Pi4 and is sending information, here the name of the target that defines the table where the customer is located. The JSON contains actually the depth between a recognized face and the camera, the name of the face and the offset on the x-axis based on the center of the frame and the center of the face. This JSON, that is sent to the Arduino, will actually trigger a method based on the name recognized, the one given by the customer and the offset value that will start to make the robot move its wheels or the camera.
 
@@ -119,9 +123,14 @@ As we do not need to have too many decimals after the coma and also for computat
 
 We then, based on the computation of the thin lens formula, we managed to isolate the required formula where $D$, the distance, is the variable that we are searching to compute : $D = \frac{f*(y’+y)}{y’}$
 
-//TODO pic 1 and 2 of CV lecture 2
-
-(source : computer vision course from Prof FAVARO lecture 2a on camera)
+<p align="center">
+	<img alt="thinLensFormulaPic1" src="./pictures/thinLensFormulaPic1.png"><br>
+	<em>figure 3 : Thin Lens Formula triangles for equation n°1</em>
+  <br><em>Source: computer vision course from Prof FAVARO lecture 2a on camera</p>
+<p align="center">
+	<img alt="thinLensFormulaPic2" src="./pictures/thinLensFormulaPic2.png"><br>
+	<em>figure 4 : SThin Lens Formula triangles for equation n°2</em>
+  <br><em>Source: computer vision course from Prof FAVARO lecture 2a on camera</p>
 
 Here is the graphical explanation on how to determine the equalities between the multiples triangles that form each length. In our code, the $y’$ represent the  ```w```, the computed eye distance in the frame and  $y$ the  ```W```, the constant of the in real life eye distance. The D’ is the focus distance, the distance between the lens and where the image is reflected. The focal length f is the distance between the sensor and the lens. We assume knowing $y’$, $y$ and $f$. We want to find $D$ and need to substitute $D’$ with the known variables in order to have the final equation. Thus we computed the following formula : 
 **Equation n°1**
