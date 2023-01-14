@@ -1,7 +1,7 @@
-## Idea behind the project
-
+# Robot butler themed service
 In this README page, we will go through the process and reflection of a 4-wheel robot project that introduces an initial automatisation of a waiter service in the particular context of a themed coffee.
 
+## Idea behind the project
 Our main idea would have been to have a butler robot that will move around thanks to black lines on the ground. There would be some gaps between the lines to indicate intersections in order to roam around and find its table.
 For various reasons that could be found under the “detailed problems encountered” section, we ended up with the following goal : a 4-wheeled motorized robot that will take from a dispenser a chosen snack from a customer and go find the table thanks to a face recognition algorithm.
 
