@@ -4,7 +4,7 @@ In this README page, we will go through the process and reflexion of a 4-wheel r
 The keywords for this project are : communication protocol, face recognition and motorized motion.
 
 As stated above, the robot has the following mains boards and tools. Those won't be deeply discussed here but you can have more information on each part if you click on the link that is located on their name :
-- [Arduino UNO R3](): SmartRobotCar makes the robot moves. It has an Arduino UNO R3 board, motors and sensors, no WIFI
+- [Arduino UNO R3](./ESP/README.md): SmartRobotCar makes the robot moves. It has an Arduino UNO R3 board, motors and sensors, no WIFI
 - [ESP32](): ESP32 WROVER takes picture. It has a camera, WIFI.
 - [Pi](): Raspberry Pi 4B process data, communicates results back to ESP. It has WIFI
 
