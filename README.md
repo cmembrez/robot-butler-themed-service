@@ -53,7 +53,91 @@ We specified on the scheme that a JSON is being sent via MQTT and UART. It shows
 
 Now that the overall system has been explained, we can focus on the 2 main parts of it.
 ### Face recognition
-//TODO general explanation OpenCV, explain code : decode, landmark, encoding, (frame, depth)
+In order to compute facial recognition, we had the options between MediaPipe and OpenCV. We actually ended up prioritizing OpenCV as it is a lighter library that has less functionalities and possibilities rather than MediaPipe. However, we knew that having less features didn’t mean being easier to use, but it would have been easier for us to go through the documentation and the information. We also realized that a lot of documentation was available for OpenCV. This is why we leaned towards this option.
+OpenCV is an Open Source Computer Vision library that will allow us to use already made methods and also pre-built configuration in order to compute our face recognition algorithm.
+We won’t explain here the dependencies and installation process on the Pi, you can find it in [its section](./Pi). We also won’t be covering the exact algorithm explanation used with OpenCV as it goes outside the reach and needs of this project. However, their [documentation](https://docs.opencv.org/3.4/da/d60/tutorial_face_main.html) covers this topic well if wanted.
+We decided to go for a pre-built version where we modified the face_recognition.py duplicata with our needs. We also looked at the [package documentation](https://face-recognition.readthedocs.io/en/latest/face_recognition.html) as well as the [api](https://face-recognition.readthedocs.io/en/latest/_modules/face_recognition/api.html) to have a better grasp of the methods’ meanings and use.
+As we are continuously receiving a stream of frame from the ESP32, we actually didn’t need to capture any images. Rather, we needed to decode the received buffer into a suitable, working for the rest of the computation.
+
+The method ```cv.imdecode()``` is actually [reading a image from a buffer](https://docs.opencv.org/3.4/d4/da8/group__imgcodecs.html).
+
+Based on that, we took the data of our message in the decode method and assign it to a variable frame in order to use it for the rest of the computation : 
+```
+frame = cv2.imdecode(np.frombuffer(msg.data, np.uint8), 1)
+```
+
+We then use two different computation on the frame : [face landmark](https://datagen.tech/guides/face-recognition/facial-landmarks/), to have facial feature locations in order to calculate the depth and the center of the face and face location and encodings : one to surround a face with a bounding box and the other to compute facial features distinctions in order to distinguish people’s faces.
+
+```
+boxes = face_recognition.face_locations(frame)
+```
+```
+encodings = face_recognition.face_encodings(frame, boxes)
+```
+```
+face_landmarks_list = face_recognition.face_landmarks(frame)
+```
+
+Every one of those variables are actually an array of values, the more faces there will be in the frame, the greater the array.
+#### Face landmark
+To begin with the face landmark : we took inspiration on a [tutorial](https://www.youtube.com/watch?v=jsoe1M2AjFk) that explained how to compare the proportional difference between a fixed, in real life constant and the one in the frame. It explained that the eye offset is an almost constant feature on people’s face and it’s generally 62[mm] for women and 64[mm] for men. Thus, we decided to put this eye distance as 63[mm] as it’s the average. 
+We do not need precise measurements as it won’t significantly impact the result.
+In order to have the most accurate point for the center of each eye, we looked at the enumeration of the facial mesh points and decided to take the inner and outer corner of the eye. The center would be defined as the iris.
+
+> *NB* :  we shouldn’t forget that the face_landmark is a dictionary. Thus we need to assign for each of the features their respective array.
+
+``` 
+left_eye = np.array(face_landmark['left_eye'])
+right_eye = np.array(face_landmark['right_eye'])
+nose_bridge = np.array(face_landmark['nose_bridge'])
+nose_tip = np.array(face_landmark['nose_tip'])
+```
+
+The computation for the center that will lead to two sets of coordinates of the left and right are is the following :
+```
+midPoint_left_eye = ((left_eye[0][0]+left_eye[3][0])/2, (left_eye[0][1]+left_eye[3][1])/2)
+midPoint_right_eye = ((right_eye[0][0]+right_eye[3][0])/2, (right_eye[0][1]+right_eye[3][1])/2)
+```
+
+Here, the corners have indexes that are specific to the list where they were contained in the dictionary. This is why their indexes don’t match with the numbers in the picture. However, you have more indication in the method that lets you interpret which point matches to which.
+
+After having the two points that will serve as a depth calculator, we will also find the center of our face. Theoretically, we could only take the tip of the nose. But for a stronger algorithm and precision, we decided to average multiple points on the nose bridge : actually the whole column with the nose tip and corners.
+
+> NB : we only took the value for the x axis as we only need to know the offset in x in order to center the face, so the offset will be a single variable and not a vector. It is also important to note that the layout information is based with the center of the coordinate system at the top left of the frame, we will need to recenter it by subtracting the width of the frame.
+
+```
+## calculate averaging for nose that will be considered as center of the face. NB, only x is taken in account, no need to have Y centered
+# to have as if the axis was in the middle, take frame width and subtract the position of nose
+sumPosXY = nose_bridge.sum(axis = 0) + nose_tip[0] + nose_tip[2] + nose_tip[4]
+totalElement = nose_bridge.shape[0] + 3
+```
+```
+xPos = frameWidth - sumPosXY[0]/totalElement
+```
+
+As we do not need to have too many decimals after the coma and also for computation length reasons, we rounded the two coordinates for the center of the eyes.
+
+We then, based on the computation of the thin lens formula, we managed to isolate the required formula where $D$, the distance, is the variable that we are searching to compute : $D = \frac{f*(y’+y)}{y’}$
+
+//TODO pic 1 and 2 of CV lecture 2
+
+(source : computer vision course from Prof FAVARO lecture 2a on camera)
+
+Here is the graphical explanation on how to determine the equalities between the multiples triangles that form each length. In our code, the $y’$ represent the  ```w```, the computed eye distance in the frame and  $y$ the  ```W```, the constant of the in real life eye distance. The D’ is the focus distance, the distance between the lens and where the image is reflected. The focal length f is the distance between the sensor and the lens. We assume knowing $y’$, $y$ and $f$. We want to find $D$ and need to substitute $D’$ with the known variables in order to have the final equation. Thus we computed the following formula : 
+**Equation n°1**
+$${\frac{y’}{y}} = {\frac{D’}{D}} \Leftrightarrow D = \frac{D’y}{y}$$
+On the equation n°1, we wish to isolate the only occurrence of our depth $D$
+**Equation n°2**
+$${\frac{y’}{y}} = {\frac{D’-f}{f}} \Leftrightarrow  {\frac{y’f}{y}} = {D’-f} \Leftrightarrow D’ = {\frac{y’f}{y}+f}$$
+On the equation n°2, our only unknown value is $D’$, this is why we try to isolate it in order to inject the equation n°2 in the n°1. It will give us a third equation : 
+$$D = {\frac{{\frac{y’f}{y}+f}y}{y}} \Leftrightarrow D = {\frac{y’f+yf}{y’}} \Leftrightarrow D = {\frac{f(y’+y)f}{y’}}$$
+
+We firstly assume to know the constant f in order to find the correct formula for our depth computation, however it is not the case with our ESP32 WROVER. For the first iteration, we locked the distance to a predefined D and measured the result of f that will come out when we isolate it from the equation n°3 as the following : $f = \frac{Dy’}{y’+y}$. We then hardcoded the f into our computation and put back the original formula in n°3., which means we have 
+$$D = \frac{f(W+w)}{w}$$
+#### Face encodings
+For the face encodings, we actually haven’t done so much beside taking the pre-built file. Indeed, there is already a method called ```compare_faces()```, that checks if there are any matches between every face in the frame and the trained models in the datasets. If so, the label under the face’s name is changed to the name they belong to, otherwise, it stays “unknown”. 
+We store all of the values to call them in the loop for the JSON string creation.
+
 ### Communication protocol
 #### Websocket
 //TODO  Aiohttp, Pi4 and ESP32 → constant communication to stream camera frame
