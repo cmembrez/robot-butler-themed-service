@@ -62,19 +62,19 @@ As we are continuously receiving a stream of frame from the ESP32, we actually d
 The method ```cv.imdecode()``` is actually [reading a image from a buffer](https://docs.opencv.org/3.4/d4/da8/group__imgcodecs.html).
 
 Based on that, we took the data of our message in the decode method and assign it to a variable frame in order to use it for the rest of the computation : 
-```
+```python
 frame = cv2.imdecode(np.frombuffer(msg.data, np.uint8), 1)
 ```
 
 We then use two different computation on the frame : [face landmark](https://datagen.tech/guides/face-recognition/facial-landmarks/), to have facial feature locations in order to calculate the depth and the center of the face and face location and encodings : one to surround a face with a bounding box and the other to compute facial features distinctions in order to distinguish people’s faces.
 
-```
+```python
 boxes = face_recognition.face_locations(frame)
 ```
-```
+```python
 encodings = face_recognition.face_encodings(frame, boxes)
 ```
-```
+```python
 face_landmarks_list = face_recognition.face_landmarks(frame)
 ```
 
@@ -86,7 +86,7 @@ In order to have the most accurate point for the center of each eye, we looked a
 
 > *NB* :  we shouldn’t forget that the face_landmark is a dictionary. Thus we need to assign for each of the features their respective array.
 
-``` 
+```python
 left_eye = np.array(face_landmark['left_eye'])
 right_eye = np.array(face_landmark['right_eye'])
 nose_bridge = np.array(face_landmark['nose_bridge'])
@@ -94,7 +94,7 @@ nose_tip = np.array(face_landmark['nose_tip'])
 ```
 
 The computation for the center that will lead to two sets of coordinates of the left and right are is the following :
-```
+```python
 midPoint_left_eye = ((left_eye[0][0]+left_eye[3][0])/2, (left_eye[0][1]+left_eye[3][1])/2)
 midPoint_right_eye = ((right_eye[0][0]+right_eye[3][0])/2, (right_eye[0][1]+right_eye[3][1])/2)
 ```
@@ -105,13 +105,13 @@ After having the two points that will serve as a depth calculator, we will also 
 
 > NB : we only took the value for the x axis as we only need to know the offset in x in order to center the face, so the offset will be a single variable and not a vector. It is also important to note that the layout information is based with the center of the coordinate system at the top left of the frame, we will need to recenter it by subtracting the width of the frame.
 
-```
+```python
 ## calculate averaging for nose that will be considered as center of the face. NB, only x is taken in account, no need to have Y centered
 # to have as if the axis was in the middle, take frame width and subtract the position of nose
 sumPosXY = nose_bridge.sum(axis = 0) + nose_tip[0] + nose_tip[2] + nose_tip[4]
 totalElement = nose_bridge.shape[0] + 3
 ```
-```
+```python
 xPos = frameWidth - sumPosXY[0]/totalElement
 ```
 
