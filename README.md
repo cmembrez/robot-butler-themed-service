@@ -133,9 +133,11 @@ We then, based on the computation of the thin lens formula, we managed to isolat
   <br><em>Source: computer vision course from Prof FAVARO lecture 2a on camera</p>
 
 Here is the graphical explanation on how to determine the equalities between the multiples triangles that form each length. In our code, the $y’$ represent the  ```w```, the computed eye distance in the frame and  $y$ the  ```W```, the constant of the in real life eye distance. The D’ is the focus distance, the distance between the lens and where the image is reflected. The focal length f is the distance between the sensor and the lens. We assume knowing $y’$, $y$ and $f$. We want to find $D$ and need to substitute $D’$ with the known variables in order to have the final equation. Thus we computed the following formula : 
+
 **Equation n°1**
 $${\frac{y’}{y}} = {\frac{D’}{D}} \Leftrightarrow D = \frac{D’y}{y}$$
 On the equation n°1, we wish to isolate the only occurrence of our depth $D$
+
 **Equation n°2**
 $${\frac{y’}{y}} = {\frac{D’-f}{f}} \Leftrightarrow  {\frac{y’f}{y}} = {D’-f} \Leftrightarrow D’ = {\frac{y’f}{y}+f}$$
 On the equation n°2, our only unknown value is $D’$, this is why we try to isolate it in order to inject the equation n°2 in the n°1. It will give us a third equation : 
@@ -156,4 +158,52 @@ We store all of the values to call them in the loop for the JSON string creation
 //TODO ESP32 to Arduino Uno R3 → gives JSON with information for further instruction and behavior control
 #### JSON construction and deserialization
 //TODO Created in pi, during loop, englobe it with MQTT topic in ESP32, deserialized in arduino
-## Technical issues
+## Technical issues and overcomings
+Because of the project’s scope and its hardware, we faced many technical issues related to software and hardware. We don’t discuss all of them on this page. Thus, in this section we will focus on the problems related to the communication protocols and the face recognition as they are one of the cores of our project and those problems can be projected to a broader scope than this actual topic.
+### UART communication
+#### Problem
+The Arduino Uno R3 only has one serial connection available that is the ```Tx0``` and ```Rx0```, but the ESP32 WROVER has two of them. We wanted to establish one UART communication on a channel that will be specifically meant for that. However, the hardware of the Arduino doesn’t allow us to do so. 
+We decided to create a new serial connection on Arduino thanks to a library called SoftwareSerial, that will allow us to create virtual pins ```Tx1``` and ```Rx1```. However, two issues arrived from this method : 
+The Arduino board has a shield with very specific branches and it seems like most of them are allocated. There isn’t any explanation about the shield’s schematic anywhere in the Elegoo library.
+The library isn’t compatible with the ESP32 so we can create the other hand of the communication channel
+#### Solution
+To overcome this problem, we firstly looked in the code and searched for every pin connection and established a list of the used and unused pins in the Elegoo SmartCar project they gave as a base.
+Here is the following list for the used pins : $\lbrace 1,3,5,6,9,10,11,13,14,17 \rbrace$, with the pin 13 being the built-in LED. The unused ones were : $\lbrace 2,4,7,8,12,15,16,18,19,20 \rbrace$. With this exhaustive list, we decide to use the pins 7 and 8 that are compatible to be transformed into Tx1 and Rx1 pins. Indeed, you need digital pins in order to use the SoftwareSerial library. You can check the type of the pin in the schematic of the board or directly on the physical component.
+After making the setup for the Arduino side, we decided to send information from the ESP32. For that, we also needed to use the SoftwareSerial on it for the communication to happen. However, this library isn’t supported by the board.
+
+We ended up finding how the Elegoo was already sending its data from the ESP32 to the Arduino on one of the examples and got inspired by it. It ends up as 
+- ESP32 has 2 serial channels : 1 that will serve as UART communication to the Arduino and 1 to print on the serial.
+- Arduino Uno R3 will directly print what it receives as it has only serial connection available.
+### Websocket communication
+#### Problem
+Our first problem was to find a way to use the prebuilt face recognition code from OpenCV combined with the websocket connection as we receive the frame through this communication rather than capturing it from a camera directly linked to the Pi. It is good to point out that the prebuilt code also needed to be adapted to the overall loop’s behavior. Indeed, this encapsulation in the websocket loop meant that the global while loop that is constantly taking the stream input was now replaced with the websocket loop behavior that provides the frame sent from the ESP32.
+Speaking of that, our second problem was to find a way to send via the frame buffer to the Pi. Indeed, we need to find a way to send our //TODO where from code websocket in ESP32 ? Tuto/already there ?
+#### Solution
+- Loop, refactoring, search
+- Stability of computation before on piZero, better handling Pi4, more powerful
+### MQTT communication
+#### Problem
+We had two main problems for the MQTT communication.
+The first one was that the mosquitto server had a running problem : the process wouldn’t be killed properly, so when we launched it again, it would give us a handshake error saying that the server was already in use.
+The second was that the response was really slow when we tried to subscribe, publish and use the PiZero as a broker.
+#### Solution
+It turns out, quite obviously, that our PiZero was overwhelmed with all the tasks. Thus, upgrading the board to a Pi 4B changed the whole thing. As the code often crashed on the Pi Zero due to a too high demand of computation power, the process wasn’t able to end properly and wouldn’t respond anymore. That goes the same for the pub/sub notification, as the whole process wasn’t responding anymore, the Pi Zero couldn’t handle any more requests nor couldn’t it update the pending pushes.
+### Face recognition
+#### Problem
+Our main problem with the face recognition was that the FPS were really low, the computation in itself took a while but wasn’t the main issue.
+#### Solution
+We firstly used the Espressif face recognition that is available on our ESP32 WROVER and realized that the FPS was low on high quality and would only work a bit faster on really low resolution. This is one of the reasons why our whole implementation switched to the Pi as the core to the computation. But even there, from the Pi Zero to the Pi4 nothing drastically changed with OpenCV. We tried to optimize the algorithm by reducing useless information, refactoring and clearing the most time taking processes but it improves from 2 fps to ~10-12 fps at max, which is more than the double, but not enough. We even tried the OpenCV code on a computer with a built-in camera and the fps weren’t high enough, they were around 20 fps. We then switched to MediaPipe on the computer and it went to around 30 fps. We had a bit more hope and put the MediaPipe code on the Pi 4B. It appears that the MediaPipe isn’t compatible with the latest version of the Pi 4B configuration (Bullseye) so we needed to flash a new image and downgrade the environment.
+After adapting the code with MediaPipe, we ended up with a very unstable recognition that was also running around the same fps as our optimized version of OpenCV. However, the huge difference was the stability and strength of the code. Based on our own face landmark computation, we were able to create a strong recognition compared to the one in MediaPipe for a Pi 4.
+
+We later realized that all of our efforts were in vain as it is due to the lack of GPU that the raspberrypi, of any version, couldn’t go past the 15 fps, even with optimization, as stated at the end of this [article](https://pyimagesearch.com/2018/06/25/raspberry-pi-face-recognition/). It appends that the default //TODO wait if test on computer with CNN algo 
+## Project values
+
+Besides the complexity of the project and the saddenning realization that the hardware was the main culprit for the lack of fluidity and improvement in our project, this prototype is nonetheless a good add value for multiple reasons : 
+Firstly, it shows how to decentralize and split tasks and computation while communicating between boards. As we know, the pi may have not been the best option due to the lack //TODO wait if test on computer with CNN algo
+
+## Conclusion
+To sum up this tutorial, if you wish to pursue the idea of an automatisation of a service by a 4 wheeled motorized robot that will roam around based on visual records, you may want to spend more time into crafting your robot from scratch and checking the dependencies and components needed. You also want to make sure that the computation power is high enough in order to realize what you are thriving for. Thus, the idea to decentralize tasks to a server would be nice if you have the capacity to have a qualitative one.
+However, if you wish to use the link between a visual receptor to a mechanical interaction that doesn't need fast reactions, then you could definitely start the project on the base of this layout, with, instead of a robot, the intended action for your use case.
+
+Overall, this project opens multiple exploratory studies on the robotic side such as the computer vision and communication side. It also raises important questions on real use and effectiveness of a project based on the time and components available.
+
