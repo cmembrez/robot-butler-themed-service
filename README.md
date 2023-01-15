@@ -35,7 +35,7 @@ Before the real implementation, we decided to make a small, representative schem
 In this section, we will talk about how our idea was implemented and how far we were able to go from our initial goal.
 
 Before digging into deeper details, it is relevant to mention our current components and kit in order to better grasp why some choices were redirected in a certain way. 
-We decided to order a low-cost kit from (ELEGOO)[https://www.elegoo.com/products/elegoo-smart-robot-car-kit-v-3-0-plus] which included an ESP32 WROVER and Arduino UNO R3 board. We also have in our possession a Raspberry Pi 4B. For each of these three boards, you can have more information on each if you click on the link that is located on their name:
+We decided to order a low-cost kit from [ELEGOO](https://www.elegoo.com/products/elegoo-smart-robot-car-kit-v-3-0-plus) which included an ESP32 WROVER and Arduino UNO R3 board. We also have in our possession a Raspberry Pi 4B. For each of these three boards, you can have more information on each if you click on the link that is located on their name:
 - [Arduino UNO R3](./UNO/README.md): SmartRobotCar makes the robot move. It has an Arduino UNO R3 board, motors and sensors, no WIFI
 - [ESP32](./ESP/README.md): ESP32 WROVER takes pictures. It has a camera, WIFI.
 - [Pi](./Pi/README.md): Raspberry Pi 4B process data, communicates results back to ESP. It has WIFI
@@ -153,7 +153,7 @@ We store all of the values to call them in the loop for the JSON string creation
 We describe in this section the three protocols used in our communication and give an overall code snippet in the end.
 
 #### MQTT
-In the context of a themed cafe, the client sends her order with her table location to the robot. For such light communications, we opted for the MQTT protocol. The broker is set up on the Pi4 using the mosquitto package and (paho-mqtt library)[https://pypi.org/project/paho-mqtt/]. The phone app is used to publish onto a given topic, say clientOrder, the table where the user is and which is the target toward which the robot will go. 
+In the context of a themed cafe, the client sends her order with her table location to the robot. For such light communications, we opted for the MQTT protocol. The broker is set up on the Pi4 using the mosquitto package and [paho-mqtt library](https://pypi.org/project/paho-mqtt/). The phone app is used to publish onto a given topic, say clientOrder, the table where the user is and which is the target toward which the robot will go. 
 
 After receiving the frame from the ESP32 (c.f. WebSocket section below), the Pi4 analyzes the frame to 
 1. Recognize face
@@ -163,7 +163,7 @@ After receiving the frame from the ESP32 (c.f. WebSocket section below), the Pi4
 The ESP32 on its end will have subscribed to the teddyCtrl topic to receive the JSON information. This back-and-forth communication between the Pi4 and ESP32 using WebSocket and MQTT comes from the Arduino’s limitation of having no WiFi.
 
 #### Websocket
-As the robot navigates toward its end goal, we want to send the frames captured by the camera of the ESP32 to the Pi4 for image processing, in constant communication. While we will use MQTT for lighter communication, WebSocket is ideal for this real-time purpose of image transfer. On the Pi4, the protocol is implemented using the (aiohttp library)[https://docs.aiohttp.org/en/stable/]. On the ESP32, (WebSocket)[https://github.com/Links2004/arduinoWebSockets] is used.
+As the robot navigates toward its end goal, we want to send the frames captured by the camera of the ESP32 to the Pi4 for image processing, in constant communication. While we will use MQTT for lighter communication, WebSocket is ideal for this real-time purpose of image transfer. On the Pi4, the protocol is implemented using the [aiohttp library](https://docs.aiohttp.org/en/stable/). On the ESP32, [WebSocket](https://github.com/Links2004/arduinoWebSockets) is used.
 
 #### UART
 To overcome the missing WiFi on the Arduino, the EPS32 forwards the JSON to the Arduino via UART - a connection already wired in our robot kit. This JSON contains information that the Arduino will use to redirect the robot toward its target and adjust its course.
