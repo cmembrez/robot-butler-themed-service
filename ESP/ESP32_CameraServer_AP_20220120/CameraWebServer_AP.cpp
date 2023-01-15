@@ -1,4 +1,9 @@
 /*
+ * @Descripttion: original code from Elegoo, comments translated to English
+ * @version: 
+ * @Author: Elegoo
+ * @Date: 2020-06-04 11:42:27
+ */
 // WARNING!!! Make sure that you have selected Board ---> ESP32 Dev Module
 //            Partition Scheme ---> Huge APP (3MB No OTA/1MB SPIFFS)
 //            PSRAM ---> enabled
@@ -23,7 +28,6 @@
 //     .open_fn = NULL,                       \
 //     .close_fn = NULL,                      \
 //   }
-*/
 
 // Select camera model
 //#define CAMERA_MODEL_WROVER_KIT
