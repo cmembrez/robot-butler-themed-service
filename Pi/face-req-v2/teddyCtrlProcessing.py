@@ -1,3 +1,11 @@
+###
+### <INCOMPLETE WORK>
+###
+### Iteration #2: attempt to separate ../face-req-v1/  logic into two parts and use threads
+###  - Face Recognition handled in ./img_processing.py
+###  - Communication with MQTT and WebSocket as in ../face-req-v1/ 
+###
+
 import logging
 import time
 

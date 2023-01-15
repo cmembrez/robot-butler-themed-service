@@ -1,5 +1,12 @@
-# source: https://github.com/carolinedunn/facial_recognition
-# modified by COSTA Kimmy and MEMBREZ Cédric
+###
+### Iteration #1
+###  # source: https://github.com/carolinedunn/facial_recognition
+###  # modified by COSTA Kimmy and MEMBREZ Cédric
+###
+###  Use of OpenCV and 'hog' default for face recognition. No communication protocols yet (MQTT, websocket)
+###
+
+
 
 #! /usr/bin/python
 

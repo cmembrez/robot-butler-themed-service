@@ -1,5 +1,6 @@
 import logging
 import time
+from datetime import datetime
 
 import aiohttp
 from aiohttp import web
@@ -10,7 +11,6 @@ from imutils.video import FPS
 import face_recognition
 import imutils
 import pickle
-import time
 import cv2
 import numpy as np
 import io
@@ -19,7 +19,7 @@ import io
 isVerbose = True
 
 # MQTT
-mqttServer = "192.168.1.41"
+mqttServer = "192.168.15.54"
 mqttPort = 1883
 mqttTopic = "teddyCtrl"
 mqttData = None
@@ -39,7 +39,7 @@ frameWidth = 0
 depth = None
 xPos = None
 
-encodingsP = "encodings.pickle"  #Determine faces from encodings.pickle file model created from train_model.py
+encodingsP = "models/encodings.pickle"  #Determine faces from encodings.pickle file model created from train_model.py
 
 def get_frameWidth():
     return frameWidth
@@ -134,7 +134,7 @@ async def websocket_handler(request):
 
             # Detect the face boxes
             currentTime = time.time()
-            boxes = face_recognition.face_locations(frame)
+            boxes = face_recognition.face_locations(frame,"hog")
             logging.info("Detect faces in image: done, in {0:.2g} sec.".format(time.time()-currentTime))
             
             # compute the facial embeddings for each face bounding box
@@ -209,11 +209,11 @@ async def websocket_handler(request):
                 # once computed, put f as cst and remove d and print
                 #d = 50
                 #print("focal length")
-                #print((d*w)/W)
+                #print((d*w)/(W+w))
                 f = 5176.532165530412
 
                 # will calculate depth
-                d = (f*W)/w
+                d = (f*(W+w))/w
                 depthList.append(d)
                 if(isVerbose):
                     print("depthList: {}".format(depthList))
@@ -331,17 +331,27 @@ async def websocket_handler(request):
 
 # LOGGING setup
 currentTime = time.time()
-logging.basicConfig(format='%(asctime)s %(message)s',
-#                     filename="log/raspberry4.log",
-                    encoding='utf-8',
-                    level=logging.DEBUG)
-logging.info("[INFO] Face Recognition: loading encodings + face detector...")
+
+#logging.basicConfig(format='%(asctime)s %(message)s',
+#                    filename="log/raspberry4.log",
+#                    encoding='utf-8',
+#                    level=logging.DEBUG)
+
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler('log/raspberry4_{:%d-%m-%Y-%H-%M-%S}.log'.format(datetime.now()), 'w', 'utf-8')
+root_logger.addHandler(handler)
+
+
+logging.info("[INFO] Logging initialized")
 
 # FACE RECOGNITION:
 # load the known faces and embeddings along with OpenCV's Haar cascade for face detection
 logging.info("[INFO] Face Recognition: loading encodings + face detector...")
 #print("[INFO] Face Recognition: loading encodings + face detector...")
 data = pickle.loads(open(encodingsP, "rb").read())
+
+print("Pickle loaded")
 
 # MQTT
 logging.info("MQTT connecting to {}:{}...".format(mqttServer, mqttPort))
@@ -352,6 +362,8 @@ clientMQTT.connect(mqttServer, mqttPort)
 logging.info("MQTT connected.")
 #print("MQTT connected.")
 
+print("MQTT DONE")
+
 # WEBSOCKET
 print("[INFO] WebSocket setup...", end="; ")
 app = web.Application()
@@ -359,3 +371,4 @@ print("aiohttp application done", end="; ")
 app.add_routes([web.get('/', websocket_handler)])
 print("aiohttp routes added")
 web.run_app(app)
+
