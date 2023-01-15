@@ -201,6 +201,22 @@ We later realized that all of our efforts were in vain as it is due to the lack 
 Besides the complexity of the project and the saddenning realization that the hardware was the main culprit for the lack of fluidity and improvement in our project, this prototype is nonetheless a good add value for multiple reasons : 
 Firstly, it shows how to decentralize and split tasks and computation while communicating between boards. As we know, the pi may have not been the best option due to the lack //TODO wait if test on computer with CNN algo
 
+Secondly, as the raspberryPi decentralization doesn’t help much, we know that the ESP32 has a face recognition feature in its own api and would lead to an easier project’s schematic. The project would be self-contained and would be adequate for a very precise scope and range of the project.
+
+> NB : It is nice to mention that the end implementation looks pretty much like the figure 1 that was displayed during the idea of the project. The only difference is that we have an extra UART communication to compensate for the lack of wifi on the Arduino board that we expected to have when we first checked the kit’s components.
+
+<p align="center">
+	<img alt="minimalImplementation" src="./pictures/minimalImplementation.PNG"><br>
+	<em>figure 5 : Schematic system's representation minimal implementation</em></p>	
+	
+The following point may not be in correlation with prospective work, but this project really highlighted the importance of power supply, more precisely computational power.
+If we want to talk about pursuing this project, we may want to adapt it to object recognition for instance, but this already helped us to better grasp the concepts and tools for the usage of computer vision  in robotics such as some base grounds on electronics and robotics itself.
+
+Lastly, the key interactions between the communication, frame computation and face recognition that will trigger a mechanical interaction is a great project to apply in other options. A few examples where the reaction time may not be a problem and where this schematic could be applicable would be the followings:
+If a camera detects that the sun is under a certain level of the horizon, trigger the action to roll down the blinds
+If a camera in a shop doesn’t detect anyone anymore, turn off the lights.
+Those use cases have practically the same ground as our project, the only difference would be that the UART communication could be through another protocol and would trigger another action than make some wheel moving. Moreover, those examples prove that a light implementation could still be useful as they don’t need to have a fast reaction to launch the action. Indeed, if the blinds are rolled down with a few minutes of latence, it won’t impact the users nor the project.
+
 ## Conclusion
 To sum up this tutorial, if you wish to pursue the idea of an automatisation of a service by a 4 wheeled motorized robot that will roam around based on visual records, you may want to spend more time into crafting your robot from scratch and checking the dependencies and components needed. You also want to make sure that the computation power is high enough in order to realize what you are thriving for. Thus, the idea to decentralize tasks to a server would be nice if you have the capacity to have a qualitative one.
 However, if you wish to use the link between a visual receptor to a mechanical interaction that doesn't need fast reactions, then you could definitely start the project on the base of this layout, with, instead of a robot, the intended action for your use case.
