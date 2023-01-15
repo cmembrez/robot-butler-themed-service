@@ -10,7 +10,7 @@ Elegoo kit using the Arduino IDE. A .ino file needs to be in a folder with the s
 ## Code explanation
 
 
-In the main file (SmartRobotCarV4.0_V1_20220303.ino)[./SmartRobotCarV4.0_V1_20220303/SmartRobotCarV4.0_V1_20220303.ino], our main contribution is called via the TeddyCtrlUARTMessage(String name) function which handles the UART message and forward to TeddyCTrlManager
+In the main file [SmartRobotCarV4.0_V1_20220303.ino](./SmartRobotCarV4.0_V1_20220303/SmartRobotCarV4.0_V1_20220303.ino), our main contribution is called via the ```TeddyCtrlUARTMessage(String name)``` function which handles the UART message and forward to TeddyCTrlManager
 ```C++
 Application_FunctionSet.TeddyCtrlUARTMessage("Zoro");
 ```
