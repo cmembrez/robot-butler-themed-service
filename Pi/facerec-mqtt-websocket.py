@@ -134,7 +134,7 @@ async def websocket_handler(request):
 
             # Detect the face boxes
             currentTime = time.time()
-            boxes = face_recognition.face_locations(frame,"hog")
+            boxes = face_recognition.face_locations(frame)
             logging.info("Detect faces in image: done, in {0:.2g} sec.".format(time.time()-currentTime))
             
             # compute the facial embeddings for each face bounding box
