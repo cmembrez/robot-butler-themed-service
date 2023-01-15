@@ -150,16 +150,77 @@ For the face encodings, we actually haven’t done so much beside taking the pre
 We store all of the values to call them in the loop for the JSON string creation.
 
 ### Communication protocol
-#### Websocket
-//TODO  Aiohttp, Pi4 and ESP32 → constant communication to stream camera frame
+We describe in this section the three protocols used in our communication and give an overall code snippet in the end.
+
 #### MQTT
-//TODO Broker Pi4 → mosquitto, Client : Pi4 (acts as 2, needs to redirect as broker but also communicates as it’s computing the face recognition), phone, ESP32. Phone → gives the target's name. Pi4 → gives name recognized, depth and x-offset, receive target’s name and check if it’s the same as recognized. If yes, send as JSON string. ESP32 → receives name and information as JSON string
+In the context of a themed cafe, the client sends her order with her table location to the robot. For such light communications, we opted for the MQTT protocol. The broker is set up on the Pi4 using the mosquitto package and (paho-mqtt library)[https://pypi.org/project/paho-mqtt/]. The phone app is used to publish onto a given topic, say clientOrder, the table where the user is and which is the target toward which the robot will go. 
+
+After receiving the frame from the ESP32 (c.f. WebSocket section below), the Pi4 analyzes the frame to 
+1. Recognize face
+2. Compute the depth at which the recognized face is
+3. Compute an horizontal offset to know in which direction to move to arrive at its target. Then, the Pi4 publishes the result of faces recognized, onto a topic, say teddyCtrl, as a JSON-formatted string. 
+
+The ESP32 on its end will have subscribed to the teddyCtrl topic to receive the JSON information. This back-and-forth communication between the Pi4 and ESP32 using WebSocket and MQTT comes from the Arduino’s limitation of having no WiFi.
+
+#### Websocket
+As the robot navigates toward its end goal, we want to send the frames captured by the camera of the ESP32 to the Pi4 for image processing, in constant communication. While we will use MQTT for lighter communication, WebSocket is ideal for this real-time purpose of image transfer. On the Pi4, the protocol is implemented using the (aiohttp library)[https://docs.aiohttp.org/en/stable/]. On the ESP32, (WebSocket)[https://github.com/Links2004/arduinoWebSockets] is used.
+
 #### UART
-//TODO ESP32 to Arduino Uno R3 → gives JSON with information for further instruction and behavior control
+To overcome the missing WiFi on the Arduino, the EPS32 forwards the JSON to the Arduino via UART - a connection already wired in our robot kit. This JSON contains information that the Arduino will use to redirect the robot toward its target and adjust its course.
 #### JSON construction and deserialization
-//TODO Created in pi, during loop, englobe it with MQTT topic in ESP32, deserialized in arduino
+The Pi creates a string in the form of a JSON and publishes it such that the ESP32 can receive it, transform it and transfer it further to the Arduino. Finally, the Arduino deserializes it and extracts the relevant information to instruct further behavior control onto the robot.
+#### Code snippets
+We regrouped the code snippets from the different boards to give an overall view of the communication:
+
+```c++
+// 1) Pi4 Creates a JSON-formatted string
+stringJSON_data += "\""+ str(indexPerson) + "\":{\"xPos\":" + str(int(xPosList[indexPerson])) + ",\"depth\":" + str(int(depthList[indexPerson])) + ",\"name\":\"" + currentname + "\"},"
+
+// 2) Pi4 Sends string via MQTT to ESP32
+mqtt_return = clientMQTT.publish(mqttTopic, stringJSON_data)
+
+// 3) ESP32 subscribe to the topic
+client.subscribe(mqtt_topic);
+
+// 4) ESP32 receives payload and format it for UART communication
+void callback(char* topic, byte* payload, unsigned int length){
+  String totalMessage = "";
+
+  totalMessage += "{\"";
+  totalMessage += topic;
+  totalMessage += "\":";
+  
+  for (int i=0;i<length;i++) {
+    char receivedChar = (char)payload[i];
+    totalMessage += receivedChar;
+  }
+  totalMessage += "}";
+  Set_MessageMQTT(totalMessage);  // setter for local variable
+}
+
+// 5) ESP32 sends data to Arduino via UART
+Serial2.print(messageMQTT);
+
+// 6) Arduino receives the data via UART
+DeserializationError error = deserializeJson(doc, Serial, DeserializationOption::Filter(filter)); //Deserialize JSON data from the serial data buffer
+```
+
 ## Technical issues and overcomings
 Because of the project’s scope and its hardware, we faced many technical issues related to software and hardware. We don’t discuss all of them on this page. Thus, in this section we will focus on the problems related to the communication protocols and the face recognition as they are one of the cores of our project and those problems can be projected to a broader scope than this actual topic.
+### MQTT communication
+#### Problem
+We had two main problems for the MQTT communication.
+The first one was that the mosquitto server had a running problem : the process wouldn’t be killed properly, so when we launched it again, it would give us a handshake error saying that the server was already in use.
+The second was that the response was really slow when we tried to subscribe, publish and use the PiZero as a broker.
+#### Solution
+It turns out, quite obviously, that our PiZero was overwhelmed with all the tasks. Thus, upgrading the board to a Pi 4B changed the whole thing. As the code often crashed on the Pi Zero due to a too high demand of computation power, the process wasn’t able to end properly and wouldn’t respond anymore. That goes the same for the pub/sub notification, as the whole process wasn’t responding anymore, the Pi Zero couldn’t handle any more requests nor couldn’t it update the pending pushes.
+### Websocket communication
+#### Problem
+Our first problem was to find a way to use the prebuilt face recognition code from OpenCV combined with the websocket connection as we receive the frame through this communication rather than capturing it from a camera directly linked to the Pi. It is good to point out that the prebuilt code also needed to be adapted to the overall loop’s behavior. Indeed, this encapsulation in the websocket loop meant that the global while loop that is constantly taking the stream input was now replaced with the websocket loop behavior that provides the frame sent from the ESP32.
+Speaking of that, our second problem was to find a way to send via the frame buffer to the Pi. Indeed, we need to find a way to send our //TODO where from code websocket in ESP32 ? Tuto/already there ?
+#### Solution
+- Loop, refactoring, search
+- Stability of computation before on piZero, better handling Pi4, more powerful
 ### UART communication
 #### Problem
 The Arduino Uno R3 only has one serial connection available that is the ```Tx0``` and ```Rx0```, but the ESP32 WROVER has two of them. We wanted to establish one UART communication on a channel that will be specifically meant for that. However, the hardware of the Arduino doesn’t allow us to do so. 
@@ -174,20 +235,7 @@ After making the setup for the Arduino side, we decided to send information from
 We ended up finding how the Elegoo was already sending its data from the ESP32 to the Arduino on one of the examples and got inspired by it. It ends up as 
 - ESP32 has 2 serial channels : 1 that will serve as UART communication to the Arduino and 1 to print on the serial.
 - Arduino Uno R3 will directly print what it receives as it has only serial connection available.
-### Websocket communication
-#### Problem
-Our first problem was to find a way to use the prebuilt face recognition code from OpenCV combined with the websocket connection as we receive the frame through this communication rather than capturing it from a camera directly linked to the Pi. It is good to point out that the prebuilt code also needed to be adapted to the overall loop’s behavior. Indeed, this encapsulation in the websocket loop meant that the global while loop that is constantly taking the stream input was now replaced with the websocket loop behavior that provides the frame sent from the ESP32.
-Speaking of that, our second problem was to find a way to send via the frame buffer to the Pi. Indeed, we need to find a way to send our //TODO where from code websocket in ESP32 ? Tuto/already there ?
-#### Solution
-- Loop, refactoring, search
-- Stability of computation before on piZero, better handling Pi4, more powerful
-### MQTT communication
-#### Problem
-We had two main problems for the MQTT communication.
-The first one was that the mosquitto server had a running problem : the process wouldn’t be killed properly, so when we launched it again, it would give us a handshake error saying that the server was already in use.
-The second was that the response was really slow when we tried to subscribe, publish and use the PiZero as a broker.
-#### Solution
-It turns out, quite obviously, that our PiZero was overwhelmed with all the tasks. Thus, upgrading the board to a Pi 4B changed the whole thing. As the code often crashed on the Pi Zero due to a too high demand of computation power, the process wasn’t able to end properly and wouldn’t respond anymore. That goes the same for the pub/sub notification, as the whole process wasn’t responding anymore, the Pi Zero couldn’t handle any more requests nor couldn’t it update the pending pushes.
+
 ### Face recognition
 #### Problem
 Our main problem with the face recognition was that the FPS were really low, the computation in itself took a while but wasn’t the main issue.
