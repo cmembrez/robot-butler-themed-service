@@ -163,6 +163,10 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 		case WStype_FRAGMENT:
 		case WStype_FRAGMENT_FIN:
 			break;
+
+    default:
+      USE_SERIAL.printf("type not handled");
+      break;
 	}
 
 }
