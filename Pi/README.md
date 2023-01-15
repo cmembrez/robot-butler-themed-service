@@ -27,18 +27,15 @@ Hardware:
 chmod +x ./setup.sh
 ```
 
+- Execute the script
+```
+./setup.sh
+```
+
 - Check installations
 ```
 python3 -V
 pip3 -V
-```
-
-3) Create a virtual environment for the Python development:
- - 
-
-4) In the virtual environment, install packages
-```
-pip install -r requirements.txt
 ```
 
 ### Websocket server
