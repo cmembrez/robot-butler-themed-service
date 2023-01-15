@@ -20,16 +20,11 @@ Hardware:
     5. Remove SD card from PC
     6. Insert it into your Raspberry Pi 
 
-2) Use the setup.sh script to install packages related to cmake and mosquitto, and enable mosquitto.service.
+2) Use the setup.sh script to install packages related to cmake and mosquitto, packages listed in requirements.txt, and enable mosquitto.service.
 
 - Set write to the setup.sh:
 ```
 chmod +x ./setup.sh
-```
-
-- Install python packages using pip
-```
-pip install -r requirements.txt
 ```
 
 - Check installations

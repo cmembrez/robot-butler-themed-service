@@ -1,3 +1,12 @@
+###
+### <INCOMPLETE WORK>
+###
+### Iteration #2: attempt to separate ../face-req-v1/  logic into two parts and use threads
+###  - Communication handled in ./teddyCtrlProcessing.py
+###  - Face Recognition here is under a Class
+###
+###
+
 import threading
 import time
 import cv2
