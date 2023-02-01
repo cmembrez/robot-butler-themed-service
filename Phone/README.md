@@ -1,6 +1,6 @@
 # Phone Communication with MQTT
 
-Using the (MQTT Broker App)[https://play.google.com/store/apps/details?id=server.com.mqtt] v1.2 on a Google Pixle 4a, we use a prototype client interface to give a specific order from a given table.
+Using the [MQTT Broker App](https://play.google.com/store/apps/details?id=server.com.mqtt) v1.2 on a Google Pixle 4a, we use a prototype client interface to give a specific order from a given table.
 
 Once the app is installed, we created an MQTT Client with IP and port of remote host broker:
 
