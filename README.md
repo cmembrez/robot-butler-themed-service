@@ -126,11 +126,11 @@ We then, based on the computation of the thin lens formula, we managed to isolat
 <p align="center">
 	<img alt="thinLensFormulaPic1" src="./pictures/thinLensFormulaPic1.PNG"><br>
 	<em>figure 3 : Thin Lens Formula triangles for equation n°1</em>
-  <br><em>Source: computer vision course from Prof FAVARO lecture 2a on camera</p>
+  <br><em>Source: computer vision course from Prof FAVARO lecture 2a on camera</em></p>
 <p align="center">
 	<img alt="thinLensFormulaPic2" src="./pictures/thinLensFormulaPic2.PNG"><br>
-	<em>figure 4 : SThin Lens Formula triangles for equation n°2</em>
-  <br><em>Source: computer vision course from Prof FAVARO lecture 2a on camera</p>
+	<em>figure 4 : Thin Lens Formula triangles for equation n°2</em>
+  <br><em>Source: computer vision course from Prof FAVARO lecture 2a on camera</em></p>
 
 Here is the graphical explanation on how to determine the equalities between the multiples triangles that form each length. In our code, the $y’$ represent the  ```w```, the computed eye distance in the frame and  $y$ the  ```W```, the constant of the in real life eye distance. The D’ is the focus distance, the distance between the lens and where the image is reflected. The focal length f is the distance between the sensor and the lens. We assume knowing $y’$, $y$ and $f$. We want to find $D$ and need to substitute $D’$ with the known variables in order to have the final equation. Thus we computed the following formula : 
 
