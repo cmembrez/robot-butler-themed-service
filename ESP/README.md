@@ -8,7 +8,7 @@ The other files from Elegoo were modified only to translate comments to English.
 
 The main file modified is [ESP32_CameraServer_AP_20220120.ino](./ESP32_CameraServer_AP_20220120/ESP32_CameraServer_AP_20220120.ino). We kept the initialization of the camera which is included in the ESP32 WROVER board. We added the WiFi, MQTT and WebSocket functionalities.
 
-In the setup() function, the ESP32 initializes two serials, one for itself and a second one which will be used for UART communication with the Arduino UNO board. Then, using wifiConnection(), ESP32 establishes a WiFi ocnnection as a station to a mobile access point (created by ourselves with our Google Pixel 4a phone). Then, using CameraWebServerAP.CameraWebServer_AP_Init(), the camera is initialized. Afterwards, both MQTT and WebSocket are set up. 
+In the setup() function, the ESP32 initializes two serials, one for itself and a second one which will be used for UART communication with the Arduino UNO board. Then, using wifiConnection(), ESP32 establishes a WiFi connection as a station to a mobile access point (created by ourselves with our Google Pixel 4a phone). Then, using CameraWebServerAP.CameraWebServer_AP_Init(), the camera is initialized. Afterwards, both MQTT and WebSocket are set up. 
 
 In the loop() function, both MQTT and WebSocket have their on .loop() running. Then, we send each frame buffer from the camera in binary format in the captureStillImage() function. Finally, the MQTT message, received with the callback() and set with the setter Set_MessageMQTT(), is printed to the second serial for the Arduino to read via UART.
 
