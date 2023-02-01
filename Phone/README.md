@@ -14,7 +14,7 @@ Once the app is installed, we created an MQTT Client with IP and port of remote 
 	<em>figure 2 : create client MQTT</em>
 	<br></p>
 
-Created the specific message to publish (value=Zoro/Candy1, topic=teddyCtrl):
+Created the specific message to publish (value=Zoro/Candy1, topic=clientOrder):
 
 <p align="center">
 	<img alt="phone-mqtt-EditPublisher" src="phone-mqtt-createPublisher.png" width="350"><br>
