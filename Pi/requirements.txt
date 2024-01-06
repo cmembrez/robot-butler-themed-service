@@ -1,5 +1,5 @@
 opencv-contrib-python==4.5.3.56
-aiohttp == 3.8.3
+aiohttp == 3.9.0
 paho-mqtt == 1.6.1
 imutils == 0.5.4
 numpy == 1.24.0
